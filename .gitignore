@@ -1,0 +1,6 @@
+# Ignore the directories
+apps/
+backups/
+downloads/
+workspaces/
+mariadb/

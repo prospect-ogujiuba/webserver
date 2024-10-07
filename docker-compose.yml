@@ -1,0 +1,70 @@
+version: "3"
+
+services:
+  # Nginx reverse proxy
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./apps:/var/www/html
+    ports:
+      - "80:80"
+    depends_on:
+      - adminer
+      - phpmyadmin
+      - php
+    networks:
+      - webserver
+
+  # MariaDB
+  mariadb:
+    container_name: mariadb
+    image: mariadb
+    volumes:
+      - ./mariadb:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 123456
+    networks:
+      - webserver
+
+  # Adminer
+  adminer:
+    container_name: adminer
+    depends_on:
+      - mariadb
+    image: adminer
+    restart: always
+    networks:
+      - webserver
+
+  # PHPMyAdmin
+  phpmyadmin:
+    container_name: phpmyadmin
+    depends_on:
+      - mariadb
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mariadb
+      MYSQL_ROOT_PASSWORD: 123456
+    networks:
+      - webserver
+
+  # PHP-FPM (Laravel, WordPress, Joomla, Drupal, etc.)
+  php:
+    container_name: php
+    build:
+      context: ./php
+      dockerfile: Dockerfile
+    volumes:
+      - ./apps:/var/www/html
+      - ./php/php.ini:/usr/local/etc/php/php.ini # Mount custom php.ini
+    networks:
+      - webserver
+
+networks:
+  webserver:

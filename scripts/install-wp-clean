@@ -1,0 +1,45 @@
+#!/bin/zsh
+
+# Define variables
+
+SITE_TITLE="WP Clean"
+DB_NAME="wp-clean"
+
+DB_USER="root"
+DB_PASS="123456"
+DB_HOST="mariadb"
+WP_DIR="/Users/priz/Sites/$DB_NAME"
+SITE_URL="$DB_NAME.test"
+ADMIN_USER="admin"
+ADMIN_PASSWORD="admin"
+ADMIN_EMAIL="$ADMIN_USER@$DB_NAME.test"
+
+# Download WordPress
+wp core download --path="$WP_DIR"
+
+# Create the wp-config.php file
+wp config create --dbname="$DB_NAME" --dbuser="$DB_USER" --dbpass="$DB_PASS" --dbhost="$DB_HOST" --path="$WP_DIR"
+
+# Set debugging to true
+wp config set WP_DEBUG false --raw --path="$WP_DIR"
+
+# Create the database
+wp db create --path="$WP_DIR"
+
+# Install WordPress
+wp core install --url="$SITE_URL" --title="$SITE_TITLE" --admin_user="$ADMIN_USER" --admin_password="$ADMIN_PASSWORD" --admin_email="$ADMIN_EMAIL" --path="$WP_DIR"
+
+# Delete default plugins
+wp plugin delete akismet hello --path="$WP_DIR"
+
+# Delete default post and page
+wp post delete 1 --force --path="$WP_DIR" # deletes the "Hello world!" post
+wp post delete 2 --force --path="$WP_DIR" # deletes the "Sample Page"
+
+# Set permalink structure
+wp rewrite structure '%postname%' --path="$WP_DIR"
+
+# Delete Themes
+wp theme delete --all --path="$WP_DIR"
+
+echo "Clean WordPress installed successfully!"

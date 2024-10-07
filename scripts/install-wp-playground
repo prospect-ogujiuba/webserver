@@ -1,0 +1,73 @@
+#!/bin/zsh
+
+# Define variables
+
+SITE_TITLE="WP Playground"
+DB_NAME="wpplayground"
+
+DB_USER="root"
+DB_PASS="123456"
+DB_HOST="mariadb"
+WP_DIR="/Users/priz/Web-Development/WordPress/sites/$DB_NAME"
+SITE_URL="$DB_NAME.test"
+ADMIN_USER="admin"
+ADMIN_PASSWORD="admin"
+ADMIN_EMAIL="$ADMIN_USER@wordpress-pod.test"
+
+# Download WordPress
+wp core download --path="$WP_DIR" --allow-root
+
+# Create the wp-config.php file
+wp config create --dbname="$DB_NAME" --dbuser="$DB_USER" --dbpass="$DB_PASS" --dbhost="$DB_HOST" --path="$WP_DIR" --allow-root
+
+# Set debugging to true
+wp config set WP_DEBUG true --raw --path="$WP_DIR" --allow-root
+
+# Create the database
+wp db create --path="$WP_DIR" --allow-root
+
+# Install WordPress
+wp core install --url="$SITE_URL" --title="$SITE_TITLE" --admin_user="$ADMIN_USER" --admin_password="$ADMIN_PASSWORD" --admin_email="$ADMIN_EMAIL" --path="$WP_DIR" --allow-root
+
+# Install plugins
+wp plugin install autodescription --path="$WP_DIR" --allow-root
+
+# GitHub repositories to install
+REPOS=(
+    "https://github.com/prospect-ogujiuba/advanced-custom-fields-pro.git"
+    "https://github.com/prospect-ogujiuba/admin-site-enhancements-pro.git"
+    "https://github.com/prospect-ogujiuba/all-in-one-wp-migration.git"
+    "https://github.com/prospect-ogujiuba/acf-extended-pro.git"
+    "https://github.com/prospect-ogujiuba/gravityforms.git"
+    "https://github.com/prospect-ogujiuba/manual-image-crop.git"
+)
+
+# Change to the plugins directory
+cd "$WP_DIR/wp-content/plugins" || exit
+
+# Loop through each repository URL
+for REPO in "${REPOS[@]}"; do
+    # Extract the plugin directory name from the repository URL
+    PLUGIN_DIR=$(basename "$REPO" .git)
+    
+    # Clone the repository
+    git clone "$REPO"
+    
+    # Activate the plugin
+    wp plugin activate "$PLUGIN_DIR" --path="$WP_DIR" --allow-root
+done
+
+# Activate plugins
+wp plugin activate --all --path="$WP_DIR" --allow-root
+
+# Delete default plugins
+wp plugin delete akismet hello --path="$WP_DIR" --allow-root
+
+# Delete default post and page
+wp post delete 1 --force --path="$WP_DIR" --allow-root# deletes the "Hello world!" post
+wp post delete 2 --force --path="$WP_DIR" --allow-root# deletes the "Sample Page"
+
+# Set permalink structure
+wp rewrite structure '%postname%' --path="$WP_DIR" --allow-root
+
+echo "Standard WordPress installed successfully!"
