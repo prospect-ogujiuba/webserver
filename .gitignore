@@ -4,3 +4,4 @@ backups/
 downloads/
 workspaces/
 mariadb/
+.DS_Store
